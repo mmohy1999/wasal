@@ -101,7 +101,7 @@ function Header({ onBook }) {
     <header className="site-header">
       <div className="container header-inner">
         <a className="brand" href="#home" aria-label="مركز وصال">
-          <img src="/assets/wasal-logo.png" alt="شعار مركز وصال" />
+          <img src="https://res.cloudinary.com/dpz02kfgx/image/upload/v1791154218/wasal-logo_x8sxmt.png" alt="شعار مركز وصال" />
         </a>
         <Button className="menu-btn" variant="secondary" icon={open ? X : Menu} iconOnly onClick={() => setOpen(!open)} aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'} aria-expanded={open} aria-controls="primary-nav" />
         <nav id="primary-nav" className={open ? 'nav open' : 'nav'} onClick={() => setOpen(false)}>
@@ -132,7 +132,7 @@ function Hero({ section, onBook }) {
           </div>
         </div>
         <div className="hero-visual">
-          <div className="photo-blob hero-photo"><img src={section.data?.image_url || '/assets/hero-child.png'} alt="طفل يطوّر مهاراته أثناء اللعب" /></div>
+          <div className="photo-blob hero-photo"><img src={section.data?.image_url || 'https://res.cloudinary.com/dpz02kfgx/image/upload/v1791154225/hero-child_stxyxz.png'} alt="طفل يطوّر مهاراته أثناء اللعب" /></div>
           <span className="float-heart" aria-hidden="true">♥</span>
         </div>
       </div>
@@ -177,7 +177,7 @@ function About({ section }) {
           )}
         </div>
         <div className="about-visual">
-          <div className="photo-blob about-photo"><img src={section.data?.image_url || '/assets/about-child.png'} alt="طفلة تتعلم من خلال اللعب بالمكعبات" /></div>
+          <div className="photo-blob about-photo"><img src={section.data?.image_url || 'https://res.cloudinary.com/dpz02kfgx/image/upload/v1791154226/about-child_gfvewx.png'} alt="طفلة تتعلم من خلال اللعب بالمكعبات" /></div>
           <span className="float-star" aria-hidden="true">★</span>
         </div>
       </div>
@@ -232,7 +232,7 @@ function Footer({ section }) {
     <footer className="footer" id="contact">
       <div className="container footer-grid">
         <div className="footer-brand">
-          <img src="/assets/wasal-logo.png" alt="مركز وصال" />
+          <img src="https://res.cloudinary.com/dpz02kfgx/image/upload/v1791154218/wasal-logo_x8sxmt.png" alt="مركز وصال" />
           <p>{section.body}</p>
         </div>
         <div className="contact-list">
