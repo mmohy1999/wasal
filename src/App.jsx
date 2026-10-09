@@ -370,26 +370,77 @@ function Journey({ section, onBook }) {
   )
 }
 
-function Footer({ section }) {
+function Footer({ section, services = [], onBook }) {
   const info = contactConfig
   const phoneHref = info.phone.replace(/[^\d+]/g, '')
 
   return (
     <footer className="footer" id="contact">
       <div className="container footer-grid">
-        <div className="footer-brand reveal-item reveal-fade-only" style={{ '--reveal-index': 0 }}>
-          <img src="/wasal/assets/wasal-logo.png" alt="مركز وصال" />
-          <p>{section.body}</p>
+        <div className="footer-col footer-col--brand reveal-item reveal-fade-only" style={{ '--reveal-index': 0 }}>
+          <a className="footer-logo" href="#home" aria-label="مركز وصال">
+            <img src="/wasal/assets/wasal-logo.png" alt="مركز وصال" />
+          </a>
+          <p className="footer-desc">{section.body}</p>
+          <div className="footer-tagline">
+            <Heart aria-hidden="true" />
+            <span>معًا نبني مستقبلًا أفضل لأطفالنا</span>
+          </div>
         </div>
-        <div className="contact-list reveal-item reveal-fade-only" style={{ '--reveal-index': 1 }}>
-          <a className="contact-ltr" href={`tel:${phoneHref}`} dir="ltr"><Phone aria-hidden="true" /> <span>{info.phone}</span></a>
-          {info.workingHours && <p><Clock aria-hidden="true" /> <span>{info.workingHours}</span></p>}
+
+        <div className="footer-col reveal-item reveal-fade-only" style={{ '--reveal-index': 1 }}>
+          <h4 className="footer-title">روابط سريعة</h4>
+          <ul className="footer-links">
+            <li><a href="#home">الرئيسية</a></li>
+            <li><a href="#services">خدماتنا</a></li>
+            <li><a href="#about">من نحن</a></li>
+            <li><a href="#journey">رحلة طفلك</a></li>
+          </ul>
         </div>
-        <div className="footer-action reveal-item reveal-fade-only" style={{ '--reveal-index': 2 }}>
-          <Button href={`https://wa.me/${info.whatsapp}`} target="_blank" rel="noreferrer" variant="primary" icon={Phone}>تواصل معنا</Button>
+
+        <div className="footer-col reveal-item reveal-fade-only" style={{ '--reveal-index': 2 }}>
+          <h4 className="footer-title">برامج التأهيل</h4>
+          <ul className="footer-links">
+            {services.map((item) => (
+              <li key={item.id || item.slug}>
+                <a href="#services">{item.title}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="footer-col footer-col--contact reveal-item reveal-fade-only" style={{ '--reveal-index': 3 }}>
+          <h4 className="footer-title">تواصل معنا</h4>
+          <p className="footer-contact-intro">فريقنا مستعد للإجابة على جميع استفساراتكم وتقديم الدعم لطفلكم.</p>
+          <div className="footer-contact-list">
+            <a className="footer-contact-pill" href={`tel:${phoneHref}`} dir="ltr">
+              <Phone aria-hidden="true" />
+              <span>{info.phone}</span>
+            </a>
+            <a
+              className="footer-contact-pill"
+              href={`https://wa.me/${info.whatsapp}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MessageCircle aria-hidden="true" />
+              <span>واتساب مباشر</span>
+            </a>
+          </div>
+          <Button
+            className="footer-cta-btn"
+            variant="primary"
+            icon={CalendarDays}
+            onClick={onBook}
+          >
+            احجز موعد الآن
+          </Button>
         </div>
       </div>
-      <div className="container copyright">جميع الحقوق محفوظة © مركز وصال <span>صُنع بحب لأطفالنا</span></div>
+      <div className="container copyright">
+        <div>جميع الحقوق محفوظة © مركز وصال</div>
+        <span>صُنع بحب لأطفالنا</span>
+      </div>
     </footer>
   )
 }
@@ -475,7 +526,7 @@ export default function App() {
         <WhyUs section={content.sections.why} />
         <Journey section={content.sections.journey} onBook={openBooking} />
       </main>
-      <Footer section={content.sections.footer} />
+      <Footer section={content.sections.footer} services={content.services} onBook={openBooking} />
       <AppointmentModal open={bookingOpen} onClose={() => setBookingOpen(false)} services={content.services} />
     </>
   )
