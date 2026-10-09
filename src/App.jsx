@@ -7,7 +7,6 @@ import {
   Clock,
   Heart,
   LoaderCircle,
-  Mail,
   Menu,
   MessageCircle,
   Phone,
@@ -18,9 +17,10 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { contactConfig } from './config/contact'
 import { defaultContent } from './data/defaultContent'
+import { useReveal } from './hooks/useReveal'
 
 const stats = [
   { icon: CalendarDays, value: 'TODO', label: 'سنوات الخبرة' },
@@ -64,14 +64,17 @@ const serviceIcons = {
 
 function SectionHeading({ title, subtitle, align = 'center' }) {
   return (
-    <div className={`section-heading section-heading--${align}`}>
+    <div className={`section-heading section-heading--${align} reveal-item`}>
       <h2>{title}</h2>
       {subtitle && <p>{subtitle}</p>}
     </div>
   )
 }
 
-function Button({ children, icon: Icon, variant = 'primary', href, iconOnly = false, className = '', type = 'button', ...props }) {
+const Button = forwardRef(function Button(
+  { children, icon: Icon, variant = 'primary', href, iconOnly = false, className = '', type = 'button', ...props },
+  ref
+) {
   const Component = href ? 'a' : 'button'
   const classes = [
     'button',
@@ -81,15 +84,52 @@ function Button({ children, icon: Icon, variant = 'primary', href, iconOnly = fa
   ].filter(Boolean).join(' ')
 
   return (
-    <Component className={classes} href={href} type={href ? undefined : type} {...props}>
+    <Component ref={ref} className={classes} href={href} type={href ? undefined : type} {...props}>
       <Icon aria-hidden="true" />
       {children && <span>{children}</span>}
     </Component>
   )
-}
+})
 
 function Header({ onBook }) {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [activeSection, setActiveSection] = useState('home')
+  const menuBtnRef = useRef(null)
+  const navRef = useRef(null)
+
+  useEffect(() => {
+    let ticking = false
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY
+          setScrolled(scrollY > 8)
+
+          // Scroll spy: dynamically track the section in view
+          const sectionIds = ['home', 'services', 'about']
+          if (SHOW_TEAM_SECTION) sectionIds.push('team')
+
+          const scrollPosition = scrollY + 120
+          let current = 'home'
+
+          for (const id of sectionIds) {
+            const el = document.getElementById(id)
+            if (el && el.offsetTop <= scrollPosition) {
+              current = id
+            }
+          }
+
+          setActiveSection(current)
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     const close = () => setOpen(false)
@@ -97,19 +137,118 @@ function Header({ onBook }) {
     return () => window.removeEventListener('resize', close)
   }, [])
 
+  useEffect(() => {
+    if (!open) return undefined
+
+    const navEl = navRef.current
+    const btnEl = menuBtnRef.current
+    if (!navEl) return undefined
+
+    const focusables = navEl.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])')
+    const firstFocusable = focusables[0]
+    const lastFocusable = focusables[focusables.length - 1]
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setOpen(false)
+        btnEl?.focus()
+        return
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable || document.activeElement === btnEl) {
+            e.preventDefault()
+            lastFocusable?.focus()
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault()
+            firstFocusable?.focus()
+          }
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    firstFocusable?.focus()
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  const toggleMenu = () => {
+    if (open) {
+      setOpen(false)
+      menuBtnRef.current?.focus()
+    } else {
+      setOpen(true)
+    }
+  }
+
+  const handleNavClick = (sectionId) => {
+    if (sectionId) {
+      setActiveSection(sectionId)
+    }
+    if (open) {
+      setOpen(false)
+      menuBtnRef.current?.focus()
+    }
+  }
+
   return (
-    <header className="site-header">
+    <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}>
       <div className="container header-inner">
-        <a className="brand" href="#home" aria-label="مركز وصال">
+        <a className="brand" href="#home" aria-label="مركز وصال" onClick={() => handleNavClick('home')}>
           <img src="/wasal/assets/wasal-logo.png" alt="شعار مركز وصال" />
         </a>
-        <Button className="menu-btn" variant="secondary" icon={open ? X : Menu} iconOnly onClick={() => setOpen(!open)} aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'} aria-expanded={open} aria-controls="primary-nav" />
-        <nav id="primary-nav" className={open ? 'nav open' : 'nav'} onClick={() => setOpen(false)}>
-          <a className="nav-link active" href="#home">الرئيسية</a>
-          <a className="nav-link" href="#services">خدماتنا</a>
-          <a className="nav-link" href="#about">من نحن</a>
-          {SHOW_TEAM_SECTION && <a className="nav-link" href="#team">فريق العمل</a>}
-          <Button variant="secondary" href="#contact" icon={Phone}>تواصل معنا</Button>
+        <Button
+          ref={menuBtnRef}
+          className="menu-btn"
+          variant="secondary"
+          icon={open ? X : Menu}
+          iconOnly
+          onClick={toggleMenu}
+          aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
+          aria-expanded={open}
+          aria-controls="primary-nav"
+        />
+        <nav
+          ref={navRef}
+          id="primary-nav"
+          className={open ? 'nav open' : 'nav'}
+        >
+          <a
+            className={`nav-link${activeSection === 'home' ? ' active' : ''}`}
+            href="#home"
+            onClick={() => handleNavClick('home')}
+          >
+            الرئيسية
+          </a>
+          <a
+            className={`nav-link${activeSection === 'services' ? ' active' : ''}`}
+            href="#services"
+            onClick={() => handleNavClick('services')}
+          >
+            خدماتنا
+          </a>
+          <a
+            className={`nav-link${activeSection === 'about' ? ' active' : ''}`}
+            href="#about"
+            onClick={() => handleNavClick('about')}
+          >
+            من نحن
+          </a>
+          {SHOW_TEAM_SECTION && (
+            <a
+              className={`nav-link${activeSection === 'team' ? ' active' : ''}`}
+              href="#team"
+              onClick={() => handleNavClick('team')}
+            >
+              فريق العمل
+            </a>
+          )}
         </nav>
         <Button variant="primary-sm" icon={CalendarDays} onClick={onBook}>احجز موعد</Button>
       </div>
@@ -122,17 +261,21 @@ function Hero({ section, onBook }) {
     <section className="hero" id="home">
       <div className="container hero-grid">
         <div className="hero-copy">
-          <p className="eyebrow">{section.eyebrow}</p>
-          <h1>{section.title}</h1>
-          <p className="hero-subtitle">{section.subtitle}</p>
-          <p className="hero-description">{section.body}</p>
-          <div className="hero-actions">
+          <p className="eyebrow hero-load-item">{section.eyebrow}</p>
+          <h1 className="hero-load-item">{section.title}</h1>
+          <p className="hero-subtitle hero-load-item">{section.subtitle}</p>
+          <p className="hero-description hero-load-item">{section.body}</p>
+          <div className="hero-actions hero-load-item">
             <Button onClick={onBook} variant="primary" icon={CalendarDays}>{section.cta_label}</Button>
             <Button href="#contact" variant="secondary" icon={Phone}>تواصل معنا</Button>
           </div>
         </div>
         <div className="hero-visual">
-          <div className="photo-blob hero-photo"><img src={section.data?.image_url || '/wasal/assets/hero-child.png'} alt="طفل يطوّر مهاراته أثناء اللعب" /></div>
+          <div className="hero-visual-motion">
+            <div className="hero-float-wrapper">
+              <div className="photo-blob hero-photo"><img src={section.data?.image_url || '/wasal/assets/hero-child.png'} alt="طفل يطوّر مهاراته أثناء اللعب" /></div>
+            </div>
+          </div>
           <span className="float-heart" aria-hidden="true">♥</span>
         </div>
       </div>
@@ -146,10 +289,10 @@ function Services({ section, items }) {
       <div className="container">
         <SectionHeading title={section.title} subtitle={section.subtitle} />
         <div className="service-grid">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const Icon = serviceIcons[item.icon] || Brain
             return (
-              <article className="service-card" key={item.id || item.slug}>
+              <article className="service-card reveal-item" key={item.id || item.slug} style={{ '--reveal-index': index }}>
                 <div className="icon-badge"><Icon aria-hidden="true" /></div>
                 <h3>{item.title}</h3><p>{item.description}</p>
               </article>
@@ -165,7 +308,7 @@ function About({ section }) {
   return (
     <section className="about section" id="about">
       <div className="container about-grid">
-        <div className="about-copy">
+        <div className="about-copy reveal-item reveal-from-start">
           <SectionHeading title={section.title} align="start" />
           <p>{section.body}</p>
           {SHOW_STATS && (
@@ -176,7 +319,7 @@ function About({ section }) {
             </div>
           )}
         </div>
-        <div className="about-visual">
+        <div className="about-visual reveal-item reveal-from-end">
           <div className="photo-blob about-photo"><img src={section.data?.image_url || '/wasal/assets/about-child.png'} alt="طفلة تتعلم من خلال اللعب بالمكعبات" /></div>
           <span className="float-star" aria-hidden="true">★</span>
         </div>
@@ -191,8 +334,11 @@ function WhyUs({ section }) {
       <div className="container">
         <SectionHeading title={section.title} />
         <div className="reason-grid">
-          {reasons.map(({ icon: Icon, title, body }) => (
-            <article className="reason" key={title}><div className="icon-badge"><Icon aria-hidden="true" /></div><div><h3>{title}</h3><p>{body}</p></div></article>
+          {reasons.map(({ icon: Icon, title, body }, index) => (
+            <article className="reason reveal-item" key={title} style={{ '--reveal-index': index }}>
+              <div className="icon-badge"><Icon aria-hidden="true" /></div>
+              <div><h3>{title}</h3><p>{body}</p></div>
+            </article>
           ))}
         </div>
       </div>
@@ -207,7 +353,7 @@ function Journey({ section, onBook }) {
         <SectionHeading title={section.title} subtitle={section.subtitle} />
         <div className="journey-grid">
           {journeySteps.map(({ icon: Icon, title, body }, index) => (
-            <article className="journey-step" key={title}>
+            <article className="journey-step reveal-item" key={title} style={{ '--reveal-index': index }}>
               <span className="journey-number">{index + 1}</span>
               <div className="icon-badge journey-icon"><Icon aria-hidden="true" /></div>
               <h3>{title}</h3>
@@ -215,7 +361,7 @@ function Journey({ section, onBook }) {
             </article>
           ))}
         </div>
-        <div className="journey-cta">
+        <div className="journey-cta reveal-item">
           <p>ابدأ بالخطوة الأولى</p>
           <Button variant="primary" icon={CalendarDays} onClick={onBook}>احجز موعد</Button>
         </div>
@@ -231,16 +377,15 @@ function Footer({ section }) {
   return (
     <footer className="footer" id="contact">
       <div className="container footer-grid">
-        <div className="footer-brand">
+        <div className="footer-brand reveal-item reveal-fade-only" style={{ '--reveal-index': 0 }}>
           <img src="/wasal/assets/wasal-logo.png" alt="مركز وصال" />
           <p>{section.body}</p>
         </div>
-        <div className="contact-list">
+        <div className="contact-list reveal-item reveal-fade-only" style={{ '--reveal-index': 1 }}>
           <a className="contact-ltr" href={`tel:${phoneHref}`} dir="ltr"><Phone aria-hidden="true" /> <span>{info.phone}</span></a>
-          <a className="contact-ltr" href={`mailto:${info.email}`} dir="ltr"><Mail aria-hidden="true" /> <span>{info.email}</span></a>
           {info.workingHours && <p><Clock aria-hidden="true" /> <span>{info.workingHours}</span></p>}
         </div>
-        <div className="footer-action">
+        <div className="footer-action reveal-item reveal-fade-only" style={{ '--reveal-index': 2 }}>
           <Button href={`https://wa.me/${info.whatsapp}`} target="_blank" rel="noreferrer" variant="primary" icon={Phone}>تواصل معنا</Button>
         </div>
       </div>
@@ -317,6 +462,8 @@ export default function App() {
   const content = defaultContent
   const [bookingOpen, setBookingOpen] = useState(false)
   const openBooking = () => setBookingOpen(true)
+
+  useReveal()
 
   return (
     <>

@@ -23,7 +23,6 @@ export const defaultContent = {
         phone: '01119610847',
         phone_link: '01119610847',
         whatsapp: '201119610847',
-        email: 'info@wasal-center.com',
       },
     },
   },
