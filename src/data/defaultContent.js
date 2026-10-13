@@ -28,7 +28,7 @@ export const defaultContent = {
   },
   services: [
     { slug: 'mental-skills', icon: 'Brain', title: 'القدرات العقلية', description: 'تنمية الذاكرة والإدراك والانتباه' },
-    { slug: 'motor-skills', icon: 'Accessibility', title: 'التأهيل الحركي', description: 'دعم المهارات الحركية والتناسق الجسدي' },
+    { slug: 'motor-skills', icon: 'Accessibility', title: 'التأهيل الوظيفي', description: 'تنمية المهارات الوظيفية وتعزيز الاستقلالية في أداء الأنشطة اليومية' },
     { slug: 'communication', icon: 'MessageCircle', title: 'اللغة والتواصل', description: 'تحسين مهارات النطق والتواصل اللفظي وغير اللفظي' },
     { slug: 'behavior', icon: 'UsersRound', title: 'تعديل السلوك', description: 'بناء سلوكيات إيجابية وتقليل السلوكيات السلبية' },
     { slug: 'learning', icon: 'BookOpen', title: 'صعوبات التعلم', description: 'تطوير مهارات القراءة والكتابة والحساب' },
